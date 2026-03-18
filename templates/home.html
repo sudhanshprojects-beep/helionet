@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Panel Monitor - Neon Tech</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1529 100%);
+            color: #00ff88;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background elements */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 255, 200, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 255, 136, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            text-shadow: 0 0 20px #00ff88, 0 0 40px #00ffcc;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            color: #00ffff;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #00ff88;
+            opacity: 0.8;
+            letter-spacing: 2px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(10, 14, 39, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 200, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.6), inset 0 0 20px rgba(0, 255, 136, 0.1);
+            border-color: #00ffcc;
+            transform: translateY(-5px);
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            color: #00ffff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ff88;
+            letter-spacing: 2px;
+        }
+
+        .status-display {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .ldr-value {
+            font-size: 3rem;
+            color: #00ffff;
+            text-shadow: 0 0 15px #00ff88;
+            margin: 15px 0;
+            font-weight: 700;
+        }
+
+        .status-label {
+            font-size: 0.9rem;
+            color: #00ff88;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.clean {
+            background-color: #00ff88;
+            box-shadow: 0 0 15px #00ff88;
+        }
+
+        .status-indicator.dirty {
+            background-color: #ff006e;
+            box-shadow: 0 0 15px #ff006e;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: #00ff88;
+            z-index: -1;
+            transition: left 0.3s ease;
+        }
+
+        button:hover {
+            color: #0a0e27;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+            transform: scale(1.02);
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button.danger {
+            border-color: #ff006e;
+        }
+
+        button.danger::before {
+            background: #ff006e;
+        }
+
+        button.danger:hover {
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.6);
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00ffcc;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        input[type="time"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #00ff88;
+            background: rgba(0, 255, 136, 0.05);
+            color: #00ff88;
+            border-radius: 5px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1rem;
+        }
+
+        input[type="time"]:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            border-color: #00ffcc;
+        }
+
+        .ml-recommendations {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .recommendation-card {
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid #00ffcc;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .recommendation-title {
+            color: #00ffcc;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .recommendation-value {
+            color: #00ff88;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .ml-section {
+            background: rgba(10, 14, 39, 0.8);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 255, 200, 0.3);
+        }
+
+        .ml-title {
+            font-size: 1.8rem;
+            color: #00ffff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ffcc;
+            letter-spacing: 2px;
+        }
+
+        .reason-text {
+            color: #00ff88;
+            font-size: 0.95rem;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(0, 255, 136, 0.05);
+            border-left: 3px solid #00ffcc;
+            border-radius: 3px;
+        }
+
+        .timestamp {
+            font-size: 0.8rem;
+            color: #00ff88;
+            opacity: 0.6;
+            margin-top: 15px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .ml-recommendations {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>☀️ SOLAR PANEL MONITOR</h1>
+            <p class="subtitle">Real-Time Cleaning Status & Predictive Maintenance</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- LDR Sensor Status -->
+            <div class="card">
+                <h2 class="card-title">📊 Panel Cleanliness</h2>
+                <div class="status-display">
+                    <div id="ldrValue" class="ldr-value">--</div>
+                    <div id="statusIndicator" class="status-label">
+                        <span class="status-indicator clean" id="statusDot"></span>
+                        <span id="statusText">Loading...</span>
+                    </div>
+                </div>
+                <div style="font-size: 0.85rem; color: #00ff88; opacity: 0.7;">
+                    <p>LDR Sensor Value (0-1023)</p>
+                    <p style="margin-top: 8px;">Low Value = Dirty Panel</p>
+                </div>
+                <button onclick="refreshStatus()">⟳ Refresh Status</button>
+            </div>
+
+            <!-- Manual Control -->
+            <div class="card">
+                <h2 class="card-title">⚙️ Manual Control</h2>
+                <p style="color: #00ff88; margin-bottom: 20px; font-size: 0.9rem;">
+                    Manually trigger or stop cleaning action
+                </p>
+                <div class="button-group">
+                    <button onclick="startCleaning()">🚀 Start Cleaning</button>
+                    <button onclick="stopCleaning()" class="danger">⏹️ Stop Cleaning</button>
+                </div>
+                <p style="color: #00ffcc; font-size: 0.8rem; margin-top: 15px;">
+                    Last Action: <span id="lastAction">None</span>
+                </p>
+            </div>
+
+            <!-- Scheduled Maintenance -->
+            <div class="card">
+                <h2 class="card-title">🕐 Scheduled Maintenance</h2>
+                <p style="color: #00ff88; margin-bottom: 15px; font-size: 0.9rem;">
+                    Set a daily cleaning schedule
+                </p>
+                <div class="input-group">
+                    <label for="maintenanceTime">Cleaning Start Time:</label>
+                    <input type="time" id="maintenanceTime" value="06:00">
+                </div>
+                <button onclick="scheduleMaintenence()" style="width: 100%;">📅 Schedule Maintenance</button>
+                <p style="color: #00ffcc; font-size: 0.8rem; margin-top: 15px;">
+                    Scheduled Time: <span id="scheduledTime">Not Set</span>
+                </p>
+                <p style="color: #00ff88; font-size: 0.75rem; opacity: 0.7; margin-top: 8px;">
+                    ⚡ Duration: 1 Hour Auto-Stop
+                </p>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <h2 class="card-title">📈 System Info</h2>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: rgba(0, 255, 136, 0.05); padding: 12px; border-radius: 5px; border-left: 3px solid #00ffcc;">
+                        <div style="color: #00ffcc; font-size: 0.8rem; margin-bottom: 4px;">Status</div>
+                        <div style="color: #00ff88; font-size: 1.1rem;" id="systemStatus">Idle</div>
+                    </div>
+                    <div style="background: rgba(0, 255, 136, 0.05); padding: 12px; border-radius: 5px; border-left: 3px solid #00ffcc;">
+                        <div style="color: #00ffcc; font-size: 0.8rem; margin-bottom: 4px;">Last Update</div>
+                        <div style="color: #00ff88; font-size: 0.95rem;" id="lastUpdate">--:-- --</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ML Recommendations Section -->
+        <div class="ml-section">
+            <h2 class="ml-title">🤖 AI-Powered Maintenance Schedule</h2>
+            <div class="reason-text" id="mlReason">
+                Loading ML recommendations...
+            </div>
+            <div class="ml-recommendations" id="mlRecommendations">
+                <div class="recommendation-card">
+                    <div class="recommendation-title">Optimal Time 1</div>
+                    <div class="recommendation-value">--:-- --</div>
+                </div>
+                <div class="recommendation-card">
+                    <div class="recommendation-title">Optimal Time 2</div>
+                    <div class="recommendation-value">--:-- --</div>
+                </div>
+                <div class="recommendation-card">
+                    <div class="recommendation-title">Optimal Time 3</div>
+                    <div class="recommendation-value">--:-- --</div>
+                </div>
+                <div class="recommendation-card">
+                    <div class="recommendation-title">Daily Frequency</div>
+                    <div class="recommendation-value" id="frequency">--</div>
+                </div>
+                <div class="recommendation-card">
+                    <div class="recommendation-title">Confidence Score</div>
+                    <div class="recommendation-value" id="confidence">--%</div>
+                </div>
+                <div class="recommendation-card">
+                    <div class="recommendation-title">Efficiency Gain</div>
+                    <div class="recommendation-value" id="efficiency">--</div>
+                </div>
+            </div>
+            <p class="timestamp" id="updateTimestamp">Last updated: --</p>
+        </div>
+    </div>
+
+    <script>
+        // Fetch and update LDR status
+        function refreshStatus() {
+            fetch('/api/ldr-status')
+                .then(response => response.json())
+                .then(data => {
+                    const ldrValue = data.ldr_value;
+                    const isDirty = data.is_dirty;
+
+                    document.getElementById('ldrValue').textContent = ldrValue ? ldrValue.toFixed(2) : '--';
+                    document.getElementById('statusDot').className = 'status-indicator ' + (isDirty ? 'dirty' : 'clean');
+                    document.getElementById('statusText').textContent = isDirty ? '🚨 DIRTY - Cleaning Needed' : '✨ CLEAN - Panel OK';
+                    document.getElementById('lastUpdate').textContent = new Date(data.timestamp).toLocaleTimeString();
+                    document.getElementById('systemStatus').textContent = isDirty ? 'Needs Cleaning' : 'Operational';
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Start cleaning
+        function startCleaning() {
+            fetch('/api/clean-now', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('lastAction').textContent = '✅ Cleaning Started - ' + new Date().toLocaleTimeString();
+                    showNotification('🚀 Cleaning initiated!');
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Stop cleaning
+        function stopCleaning() {
+            fetch('/api/stop-cleaning', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('lastAction').textContent = '⏹️ Cleaning Stopped - ' + new Date().toLocaleTimeString();
+                    showNotification('⏹️ Cleaning stopped!');
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Schedule maintenance
+        function scheduleMaintenence() {
+            const timeInput = document.getElementById('maintenanceTime').value;
+            if (!timeInput) {
+                alert('Please select a time');
+                return;
+            }
+
+            fetch('/api/schedule-maintenance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ time: timeInput })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('scheduledTime').textContent = timeInput + ' (Daily)';
+                    showNotification('📅 Maintenance scheduled for ' + timeInput);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Fetch ML recommendations
+        function fetchMLRecommendations() {
+            fetch('/api/ml-recommendation')
+                .then(response => response.json())
+                .then(data => {
+                    const times = data.optimal_times;
+                    const cards = document.querySelectorAll('.recommendation-card');
+                    
+                    cards[0].innerHTML = `<div class="recommendation-title">Optimal Time 1</div><div class="recommendation-value">${times[0]}</div>`;
+                    cards[1].innerHTML = `<div class="recommendation-title">Optimal Time 2</div><div class="recommendation-value">${times[1]}</div>`;
+                    cards[2].innerHTML = `<div class="recommendation-title">Optimal Time 3</div><div class="recommendation-value">${times[2]}</div>`;
+                    
+                    document.getElementById('frequency').textContent = data.frequency;
+                    document.getElementById('confidence').textContent = (data.confidence * 100).toFixed(0) + '%';
+                    document.getElementById('efficiency').textContent = data.efficiency_gain;
+                    document.getElementById('mlReason').textContent = data.reason;
+                    document.getElementById('updateTimestamp').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Notification feedback
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(0, 255, 136, 0.2);
+                border: 2px solid #00ff88;
+                color: #00ff88;
+                padding: 15px 20px;
+                border-radius: 5px;
+                font-family: 'Roboto Mono', monospace;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Initial load
+        window.onload = function() {
+            refreshStatus();
+            fetchMLRecommendations();
+            
+            // Auto-refresh every 10 seconds
+            setInterval(refreshStatus, 10000);
+            
+            // Fetch ML recommendations every 60 seconds
+            setInterval(fetchMLRecommendations, 60000);
+        };
+    </script>
+</body>
+</html>
